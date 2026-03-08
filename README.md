@@ -1,0 +1,2 @@
+# OffGridSolar
+Array size calculator.
