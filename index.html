@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Off-Grid Solar System Size Calculator</title>
-  <meta name="description" content="Free off-grid solar system size calculator. Estimate solar array size, battery bank capacity, and panel count for cabins, RVs, and off-grid systems.">
+  <meta name="description" content="Free off-grid solar calculator to estimate solar array size, battery storage, and panel count.">
   <meta property="og:title" content="Off-Grid Solar System Size Calculator">
-  <meta property="og:description" content="Estimate solar array size, battery bank storage, and panel count for off-grid systems.">
+  <meta property="og:description" content="Estimate solar array size, battery storage, and panel count for practical off-grid setups.">
   <meta property="og:image" content="https://ittworks.com/logo.png">
-  <meta property="og:url" content="https://ittworks.com">
+  <meta property="og:url" content="https://off-grid-solar.vercel.app">
   <meta property="og:type" content="website">
   <script defer src="/_vercel/insights/script.js"></script>
 
@@ -25,7 +25,7 @@
     .container {
       background: #1b2224;
       max-width: 560px;
-      margin: 40px auto;
+      margin: 20px auto;
       padding: 28px;
       border-radius: 14px;
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
@@ -34,11 +34,10 @@
 
     .brand-logo {
       display: block;
-      margin: 0 auto 20px auto;
-      max-width: 200px;
+      margin: 10px auto 20px auto;
+      max-width: 180px;
       width: 100%;
       height: auto;
-      border-radius: 10px;
     }
 
     h1 {
@@ -136,25 +135,6 @@
       margin-right: auto;
       line-height: 1.5;
     }
-
-    .links {
-      margin-top: 18px;
-      text-align: left;
-      max-width: 420px;
-      margin-left: auto;
-      margin-right: auto;
-      font-size: 14px;
-      color: #cfc6ad;
-    }
-
-    .links a {
-      color: #c8a46b;
-      text-decoration: none;
-    }
-
-    .links a:hover {
-      text-decoration: underline;
-    }
   </style>
 </head>
 <body>
@@ -202,4 +182,68 @@
       <option value="48">48V</option>
     </select>
 
-    <div class
+    <div class="helper">
+      Daily energy use is how much electricity you expect to consume per day. Reserve days represent how long your batteries should last without sun.
+    </div>
+
+    <button onclick="calculateSystem()">Calculate System Size</button>
+
+    <div id="result" class="result"></div>
+
+    <div class="note">
+      This is a practical planning estimate for off-grid systems.
+    </div>
+
+    <div class="disclaimer">
+      Estimates are for general planning only. Battery chemistry, inverter losses, depth of discharge, seasonal weather, and system design choices may affect final sizing.
+    </div>
+  </div>
+
+  <script>
+    function calculateSystem() {
+      const dailyKwh = parseFloat(document.getElementById("dailyKwh").value);
+      const sunHours = parseFloat(document.getElementById("sunHours").value);
+      const reserveDays = parseFloat(document.getElementById("reserveDays").value);
+      const panelWattage = parseFloat(document.getElementById("panelWattage").value);
+      const systemVoltage = document.getElementById("systemVoltage").value;
+
+      const resultBox = document.getElementById("result");
+
+      if (
+        isNaN(dailyKwh) ||
+        isNaN(sunHours) ||
+        isNaN(reserveDays) ||
+        isNaN(panelWattage) ||
+        systemVoltage === ""
+      ) {
+        resultBox.style.display = "block";
+        resultBox.innerHTML = "<strong>Please complete all fields with valid values.</strong>";
+        return;
+      }
+
+      const arrayWatts = Math.ceil((dailyKwh * 1000) / sunHours);
+      const batteryKwh = (dailyKwh * reserveDays).toFixed(1);
+      const panelCount = Math.ceil(arrayWatts / panelWattage);
+
+      const batteryAh = Math.ceil((batteryKwh * 1000) / parseInt(systemVoltage, 10));
+
+      let systemType = "Small Off-Grid System";
+      if (arrayWatts > 2000 && arrayWatts <= 5000) {
+        systemType = "Medium Off-Grid System";
+      } else if (arrayWatts > 5000) {
+        systemType = "Large Off-Grid System";
+      }
+
+      resultBox.style.display = "block";
+      resultBox.innerHTML =
+        "<strong>Recommended Solar Array: " + arrayWatts + " watts</strong>" +
+        "<div><b>Estimated Panel Count:</b> " + panelCount + " panels (" + panelWattage + "W each)</div>" +
+        "<div><b>Battery Storage Needed:</b> " + batteryKwh + " kWh</div>" +
+        "<div><b>Battery Bank Capacity:</b> " + batteryAh + " Ah at " + systemVoltage + "V</div>" +
+        "<div><b>Estimated System Type:</b> " + systemType + "</div>" +
+        "<br>" +
+        "<div><b>Tip:</b> Add extra headroom for inverter losses, cloudy weather, and future load growth.</div>";
+    }
+  </script>
+</body>
+</html>
