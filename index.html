@@ -7,7 +7,7 @@
 
 <title>Off-Grid Solar System Size Calculator</title>
 
-<meta name="description" content="Estimate solar array size, battery storage, and panel count for a practical off-grid setup.">
+<meta name="description" content="Estimate solar array size, battery storage, panel count, inverter recommendation, and charge controller sizing for a practical off-grid setup.">
 
 <script defer src="/_vercel/insights/script.js"></script>
 
@@ -38,11 +38,13 @@ margin-bottom:20px;
 
 h1{
 color:#c8a46b;
+margin-bottom:10px;
 }
 
 p{
 color:#cfc6ad;
 line-height:1.5;
+margin-bottom:20px;
 }
 
 input,select,button{
@@ -137,6 +139,7 @@ font-weight:bold;
 
 .donate-btn img{
 width:24px;
+height:24px;
 }
 
 .footer{
@@ -161,12 +164,12 @@ text-decoration:underline;
 
 <div class="container">
 
-<img src="logo.png" class="logo">
+<img src="logo.png" class="logo" alt="In Tandem Toolworks logo">
 
 <h1>Off-Grid Solar System Size Calculator</h1>
 
 <p>
-Estimate solar array size, battery storage, and panel count for a practical off-grid setup.
+Estimate solar array size, battery storage, panel count, inverter recommendation, and charge controller sizing for a practical off-grid setup.
 </p>
 
 <input id="dailyKwh" placeholder="Daily Energy Use in kWh (Example: 6)">
@@ -182,7 +185,7 @@ Estimate solar array size, battery storage, and panel count for a practical off-
 </select>
 
 <div class="helper">
-Daily energy use is how much electricity you expect to consume per day. Reserve days represent how long your batteries should last without sun.
+Daily energy use is how much electricity you expect to consume each day. Reserve days represent how long your batteries should last without meaningful solar input.
 </div>
 
 <button onclick="calculateSystem()">Calculate System Size</button>
@@ -209,7 +212,7 @@ Solar Production Calculator
 
 <a class="donate-btn" href="https://donate.stripe.com/4gM3cv0kV4UJbzPfeDeAg00" target="_blank">
 
-<img src="ittw-donate.png">
+<img src="ittw-donate.png" alt="Donation icon">
 
 Support InTandem Toolworks
 
@@ -247,37 +250,55 @@ let dailyKwh=parseFloat(document.getElementById("dailyKwh").value);
 let sunHours=parseFloat(document.getElementById("sunHours").value);
 let reserveDays=parseFloat(document.getElementById("reserveDays").value);
 let panelWattage=parseFloat(document.getElementById("panelWattage").value);
-let systemVoltage=document.getElementById("systemVoltage").value;
+let systemVoltage=parseInt(document.getElementById("systemVoltage").value);
 
 let resultBox=document.getElementById("result");
 
-if(isNaN(dailyKwh)||isNaN(sunHours)||isNaN(reserveDays)||isNaN(panelWattage)||systemVoltage===""){
+if(isNaN(dailyKwh)||isNaN(sunHours)||isNaN(reserveDays)||isNaN(panelWattage)||isNaN(systemVoltage)){
 resultBox.style.display="block";
 resultBox.innerHTML="<strong>Please complete all fields with valid values.</strong>";
 return;
 }
 
 let arrayWatts=Math.ceil((dailyKwh*1000)/sunHours);
+let recommendedArrayWatts=Math.ceil(arrayWatts*1.2);
+
 let batteryKwh=(dailyKwh*reserveDays).toFixed(1);
-let panelCount=Math.ceil(arrayWatts/panelWattage);
-let batteryAh=Math.ceil((batteryKwh*1000)/parseInt(systemVoltage));
+let usableBatteryKwh=(dailyKwh*reserveDays*1.15).toFixed(1);
+
+let panelCount=Math.ceil(recommendedArrayWatts/panelWattage);
+
+let batteryAh=Math.ceil((batteryKwh*1000)/systemVoltage);
+let recommendedBatteryAh=Math.ceil((usableBatteryKwh*1000)/systemVoltage);
+
+let inverterWatts=Math.ceil((dailyKwh*1000)/4);
+if(inverterWatts < 1000){ inverterWatts = 1000; }
+
+let chargeControllerAmps=Math.ceil(recommendedArrayWatts/systemVoltage*1.25);
 
 let systemType="Small Off-Grid System";
-if(arrayWatts>2000&&arrayWatts<=5000){
+if(recommendedArrayWatts>2000&&recommendedArrayWatts<=5000){
 systemType="Medium Off-Grid System";
-}else if(arrayWatts>5000){
+}else if(recommendedArrayWatts>5000){
 systemType="Large Off-Grid System";
 }
 
 resultBox.style.display="block";
 resultBox.innerHTML=
-"<strong>Recommended Solar Array: "+arrayWatts+" watts</strong>"+
+"<strong>Recommended Solar Array: "+recommendedArrayWatts+" watts</strong>"+
+"<div><b>Base Solar Array:</b> "+arrayWatts+" watts</div>"+
 "<div><b>Estimated Panel Count:</b> "+panelCount+" panels ("+panelWattage+"W each)</div>"+
+"<br>"+
 "<div><b>Battery Storage Needed:</b> "+batteryKwh+" kWh</div>"+
+"<div><b>Recommended Battery Storage with Headroom:</b> "+usableBatteryKwh+" kWh</div>"+
 "<div><b>Battery Bank Capacity:</b> "+batteryAh+" Ah at "+systemVoltage+"V</div>"+
+"<div><b>Recommended Battery Bank Capacity:</b> "+recommendedBatteryAh+" Ah at "+systemVoltage+"V</div>"+
+"<br>"+
+"<div><b>Suggested Inverter Size:</b> "+inverterWatts+" watts minimum</div>"+
+"<div><b>Suggested Charge Controller Size:</b> "+chargeControllerAmps+" amps</div>"+
 "<div><b>Estimated System Type:</b> "+systemType+"</div>"+
 "<br>"+
-"<div><b>Tip:</b> Add extra headroom for inverter losses, cloudy weather, and future load growth.</div>";
+"<div><b>Tip:</b> Add extra headroom for inverter surge loads, cloudy weather, seasonal loss, and future expansion.</div>";
 
 }
 
